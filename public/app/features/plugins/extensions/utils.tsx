@@ -473,19 +473,23 @@ export const isAddedLinkMetaInfoMissing = (
   const pluginJsonMetaInfo = app ? app.extensions.addedLinks.find(({ title }) => title === metaInfo.title) : null;
 
   if (!app) {
-    log.warning(`${logPrefix} couldn't find app plugin "${pluginId}"`);
+    log.warning("Could not register added link. Reason: Couldn't find an app plugin that matches the plugin id.");
     return true;
   }
 
   if (!pluginJsonMetaInfo) {
-    log.warning(`${logPrefix} not registered in the plugin.json under "extensions.addedLinks[]".`);
+    log.warning(
+      `Could not register added link. Reason: The extension was not declared in the plugin.json of "${pluginId}". Added link extensions must be listed in the section "extensions.addedLinks[].`
+    );
 
     return true;
   }
 
   const targets = Array.isArray(metaInfo.targets) ? metaInfo.targets : [metaInfo.targets];
   if (!targets.every((target) => pluginJsonMetaInfo.targets.includes(target))) {
-    log.warning(`${logPrefix} the "targets" don't match with ones in the plugin.json under "extensions.addedLinks[]".`);
+    log.warning(
+      `Could not register added link. Reason: The "targets" provided for the added link don't match with the ones listed under "extensions.addedLink[]" in the plugin.json.`
+    );
 
     return true;
   }
@@ -511,12 +515,14 @@ export const isAddedComponentMetaInfoMissing = (
   const pluginJsonMetaInfo = app ? app.extensions.addedComponents.find(({ title }) => title === metaInfo.title) : null;
 
   if (!app) {
-    log.warning(`${logPrefix} couldn't find app plugin "${pluginId}"`);
+    log.warning("Could not register added component. Reason: Couldn't find an app plugin that matches the plugin id");
     return true;
   }
 
   if (!pluginJsonMetaInfo) {
-    log.warning(`${logPrefix} not registered in the plugin.json under "extensions.addedComponents[]".`);
+    log.warning(
+      `Could not register added component. Reason: The extension was not declared in the plugin.json". Added component extensions must be listed in the section "extensions.addedComponents[].`
+    );
 
     return true;
   }
@@ -524,7 +530,7 @@ export const isAddedComponentMetaInfoMissing = (
   const targets = Array.isArray(metaInfo.targets) ? metaInfo.targets : [metaInfo.targets];
   if (!targets.every((target) => pluginJsonMetaInfo.targets.includes(target))) {
     log.warning(
-      `${logPrefix} the "targets" don't match with ones in the plugin.json under "extensions.addedComponents[]".`
+      `Could not register added component. Reason: The "targets" provided for the added component don't match with the ones listed under "extensions.addedComponents[]" in the plugin.json.`
     );
 
     return true;
@@ -551,19 +557,23 @@ export const isExposedComponentMetaInfoMissing = (
   const pluginJsonMetaInfo = app ? app.extensions.exposedComponents.find(({ id }) => id === metaInfo.id) : null;
 
   if (!app) {
-    log.warning(`${logPrefix} couldn't find app plugin: "${pluginId}"`);
+    log.warning(
+      "Could not register exposed component. Reason: Couldn't find an app plugin that matches the plugin id."
+    );
     return true;
   }
 
   if (!pluginJsonMetaInfo) {
-    log.warning(`${logPrefix} not registered in the plugin.json under "extensions.exposedComponents[]".`);
+    log.warning(
+      `Could not register added link. Reason: The extension was not declared in the plugin.json of "${pluginId}". Exposed component extensions must be listed in the section "extensions.exposedComponents[].`
+    );
 
     return true;
   }
 
   if (pluginJsonMetaInfo.title !== metaInfo.title) {
     log.warning(
-      `${logPrefix} the "title" doesn't match with one in the plugin.json under "extensions.exposedComponents[]".`
+      `Could not register exposed component. Reason: The "title" of the exposed comoonent doesn't match the title in "extensions.exposedComponents[]" in the plugin.json.`
     );
 
     return true;
