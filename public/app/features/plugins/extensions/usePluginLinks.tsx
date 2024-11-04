@@ -9,14 +9,15 @@ import {
 } from '@grafana/runtime/src/services/pluginExtensions/getPluginExtensions';
 
 import { useAddedLinksRegistry } from './ExtensionRegistriesContext';
+import { INVALID_EXTENSION_POINT_ID, MISSING_EXTENSION_POINT_META_INFO } from './errors';
 import { log } from './logs/log';
+import { isExtensionPointMetaInfoMissing } from './metaValidators';
 import {
   generateExtensionId,
   getLinkExtensionOnClick,
   getLinkExtensionOverrides,
   getLinkExtensionPathWithTracking,
   getReadOnlyProxy,
-  isExtensionPointMetaInfoMissing,
   isGrafanaDevMode,
 } from './utils';
 import { isExtensionPointIdValid } from './validators';
@@ -41,19 +42,15 @@ export function usePluginLinks({
     });
 
     if (enableRestrictions && !isExtensionPointIdValid({ extensionPointId, pluginId })) {
-      pointLog.warning(
-        `Extension point usePluginLinks("${extensionPointId}") - the id should be prefixed with your plugin id ("${pluginId}/").`
-      );
+      pointLog.error(INVALID_EXTENSION_POINT_ID(pluginId, extensionPointId));
       return {
         isLoading: false,
         links: [],
       };
     }
 
-    if (enableRestrictions && isExtensionPointMetaInfoMissing(extensionPointId, pluginContext, pointLog)) {
-      pointLog.warning(
-        `Invalid extension point. Reason: The extension point is not declared in the "plugin.json" file. ExtensionPointId: "${extensionPointId}"`
-      );
+    if (enableRestrictions && isExtensionPointMetaInfoMissing(extensionPointId, pluginContext)) {
+      pointLog.error(MISSING_EXTENSION_POINT_META_INFO);
       return {
         isLoading: false,
         links: [],

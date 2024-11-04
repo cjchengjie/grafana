@@ -8,8 +8,10 @@ import {
 } from '@grafana/runtime/src/services/pluginExtensions/getPluginExtensions';
 
 import { useAddedComponentsRegistry } from './ExtensionRegistriesContext';
+import { INVALID_EXTENSION_POINT_ID, MISSING_EXTENSION_POINT_META_INFO } from './errors';
 import { log } from './logs/log';
-import { isExtensionPointMetaInfoMissing, isGrafanaDevMode } from './utils';
+import { isExtensionPointMetaInfoMissing } from './metaValidators';
+import { isGrafanaDevMode } from './utils';
 import { isExtensionPointIdValid } from './validators';
 
 // Returns an array of component extensions for the given extension point
@@ -33,19 +35,15 @@ export function usePluginComponents<Props extends object = {}>({
     });
 
     if (enableRestrictions && !isExtensionPointIdValid({ extensionPointId, pluginId })) {
-      pointLog.warning(
-        `Extension point usePluginComponents("${extensionPointId}") - the id should be prefixed with your plugin id ("${pluginId}/").`
-      );
+      pointLog.error(INVALID_EXTENSION_POINT_ID(pluginId, extensionPointId));
       return {
         isLoading: false,
         components: [],
       };
     }
 
-    if (enableRestrictions && isExtensionPointMetaInfoMissing(extensionPointId, pluginContext, pointLog)) {
-      pointLog.warning(
-        `usePluginComponents("${extensionPointId}") - The extension point is missing from the "plugin.json" file.`
-      );
+    if (enableRestrictions && isExtensionPointMetaInfoMissing(extensionPointId, pluginContext)) {
+      pointLog.error(MISSING_EXTENSION_POINT_META_INFO);
       return {
         isLoading: false,
         components: [],

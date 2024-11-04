@@ -425,44 +425,6 @@ export function getLinkExtensionPathWithTracking(pluginId: string, path: string,
 // Can be set with the `GF_DEFAULT_APP_MODE` environment variable
 export const isGrafanaDevMode = () => config.buildInfo.env === 'development';
 
-// Checks if the meta information is missing from the plugin's plugin.json file
-export const isExtensionPointMetaInfoMissing = (
-  extensionPointId: string,
-  pluginContext: PluginContextType,
-  log: ExtensionsLog
-) => {
-  const pluginId = pluginContext.meta?.id;
-  const extensionPoints = pluginContext.meta?.extensions?.extensionPoints;
-
-  if (!extensionPoints || !extensionPoints.some((ep) => ep.id === extensionPointId)) {
-    log.warning(
-      `Extension point "${extensionPointId}" - it's not recorded in the "plugin.json" for "${pluginId}". Please add it under "extensions.extensionPoints[]".`
-    );
-    return true;
-  }
-
-  return false;
-};
-
-// Checks if an exposed component that the plugin is depending on is missing from the `dependencies` in the plugin.json file
-export const isExposedComponentDependencyMissing = (
-  id: string,
-  pluginContext: PluginContextType,
-  log: ExtensionsLog
-) => {
-  const pluginId = pluginContext.meta?.id;
-  const exposedComponentsDependencies = pluginContext.meta?.dependencies?.extensions?.exposedComponents;
-
-  if (!exposedComponentsDependencies || !exposedComponentsDependencies.includes(id)) {
-    log.warning(
-      `Using exposed component "${id}" - it's not recorded in the "plugin.json" for "${pluginId}". Please add it under "dependencies.extensions.exposedComponents[]".`
-    );
-    return true;
-  }
-
-  return false;
-};
-
 export const isAddedLinkMetaInfoMissing = (
   pluginId: string,
   metaInfo: PluginExtensionAddedLinkConfig,
@@ -473,12 +435,12 @@ export const isAddedLinkMetaInfoMissing = (
   const pluginJsonMetaInfo = app ? app.extensions.addedLinks.find(({ title }) => title === metaInfo.title) : null;
 
   if (!app) {
-    log.warning("Could not register added link. Reason: Couldn't find an app plugin that matches the plugin id.");
+    log.error("Could not register added link. Reason: Couldn't find an app plugin that matches the plugin id.");
     return true;
   }
 
   if (!pluginJsonMetaInfo) {
-    log.warning(
+    log.error(
       `Could not register added link. Reason: The extension was not declared in the plugin.json of "${pluginId}". Added link extensions must be listed in the section "extensions.addedLinks[].`
     );
 
@@ -487,7 +449,7 @@ export const isAddedLinkMetaInfoMissing = (
 
   const targets = Array.isArray(metaInfo.targets) ? metaInfo.targets : [metaInfo.targets];
   if (!targets.every((target) => pluginJsonMetaInfo.targets.includes(target))) {
-    log.warning(
+    log.error(
       `Could not register added link. Reason: The "targets" provided for the added link don't match with the ones listed under "extensions.addedLink[]" in the plugin.json.`
     );
 
@@ -515,13 +477,13 @@ export const isAddedComponentMetaInfoMissing = (
   const pluginJsonMetaInfo = app ? app.extensions.addedComponents.find(({ title }) => title === metaInfo.title) : null;
 
   if (!app) {
-    log.warning("Could not register added component. Reason: Couldn't find an app plugin that matches the plugin id");
+    log.error("Could not register added component. Reason: Couldn't find an app plugin that matches the plugin id");
     return true;
   }
 
   if (!pluginJsonMetaInfo) {
-    log.warning(
-      `Could not register added component. Reason: The extension was not declared in the plugin.json". Added component extensions must be listed in the section "extensions.addedComponents[].`
+    log.error(
+      `Could not register added component. Reason: The extension was not declared in the "plugin.json" file. Added component extensions must be listed in the section "extensions.addedComponents[].`
     );
 
     return true;
@@ -529,7 +491,7 @@ export const isAddedComponentMetaInfoMissing = (
 
   const targets = Array.isArray(metaInfo.targets) ? metaInfo.targets : [metaInfo.targets];
   if (!targets.every((target) => pluginJsonMetaInfo.targets.includes(target))) {
-    log.warning(
+    log.error(
       `Could not register added component. Reason: The "targets" provided for the added component don't match with the ones listed under "extensions.addedComponents[]" in the plugin.json.`
     );
 
@@ -557,14 +519,12 @@ export const isExposedComponentMetaInfoMissing = (
   const pluginJsonMetaInfo = app ? app.extensions.exposedComponents.find(({ id }) => id === metaInfo.id) : null;
 
   if (!app) {
-    log.warning(
-      "Could not register exposed component. Reason: Couldn't find an app plugin that matches the plugin id."
-    );
+    log.error("Could not register exposed component. Reason: Couldn't find an app plugin that matches the plugin id.");
     return true;
   }
 
   if (!pluginJsonMetaInfo) {
-    log.warning(
+    log.error(
       `Could not register added link. Reason: The extension was not declared in the plugin.json of "${pluginId}". Exposed component extensions must be listed in the section "extensions.exposedComponents[].`
     );
 
@@ -572,7 +532,7 @@ export const isExposedComponentMetaInfoMissing = (
   }
 
   if (pluginJsonMetaInfo.title !== metaInfo.title) {
-    log.warning(
+    log.error(
       `Could not register exposed component. Reason: The "title" of the exposed comoonent doesn't match the title in "extensions.exposedComponents[]" in the plugin.json.`
     );
 
