@@ -46,9 +46,7 @@ export class AddedComponentsRegistry extends Registry<
       }
 
       if (!config.description) {
-        configLog.error(
-          `Could not register added component with title '${config.title}'. Reason: Description is missing.`
-        );
+        configLog.error(`Could not register added component'. Reason: Description is missing.`);
         continue;
       }
 
@@ -66,7 +64,7 @@ export class AddedComponentsRegistry extends Registry<
 
         if (!isGrafanaCoreExtensionPoint(extensionPointId) && !extensionPointEndsWithVersion(extensionPointId)) {
           pointIdLog.warning(
-            `Added component "${config.title}": it's recommended to suffix the extension point id ("${extensionPointId}") with a version, e.g 'myorg-basic-app/extension-point/v1'.`
+            `It's recommended to suffix the extension point id ("${extensionPointId}") with a version, e.g 'myorg-basic-app/extension-point/v1'.`
           );
         }
 

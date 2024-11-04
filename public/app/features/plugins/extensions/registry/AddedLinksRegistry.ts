@@ -90,7 +90,7 @@ export class AddedLinksRegistry extends Registry<AddedLinkRegistryItem[], Plugin
 
         if (!isGrafanaCoreExtensionPoint(extensionPointId) && !extensionPointEndsWithVersion(extensionPointId)) {
           pointIdLog.warning(
-            `Added link "${config.title}: it's recommended to suffix the extension point id ("${extensionPointId}") with a version, e.g 'myorg-basic-app/extension-point/v1'.`
+            `It's recommended to suffix the extension point id ("${extensionPointId}") with a version, e.g 'myorg-basic-app/extension-point/v1'.`
           );
         }
 
