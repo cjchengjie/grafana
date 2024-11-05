@@ -396,7 +396,7 @@ describe('AddedComponentsRegistry', () => {
       ],
     });
 
-    expect(log.error).toHaveBeenCalledWith("Could not register added component'. Reason: Description is missing.");
+    expect(log.error).toHaveBeenCalledWith(expect.stringMatching(/Description is missing/));
     const currentState = await registry.getState();
     expect(Object.keys(currentState)).toHaveLength(0);
   });
@@ -417,7 +417,7 @@ describe('AddedComponentsRegistry', () => {
       ],
     });
 
-    expect(log.error).toHaveBeenCalledWith('Could not register added component. Reason: Title is missing.');
+    expect(log.error).toHaveBeenCalledWith(expect.stringMatching(/Title is missing/));
 
     const currentState = await registry.getState();
     expect(Object.keys(currentState)).toHaveLength(0);

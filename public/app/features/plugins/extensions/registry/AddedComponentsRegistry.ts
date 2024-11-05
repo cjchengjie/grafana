@@ -2,7 +2,8 @@ import { ReplaySubject } from 'rxjs';
 
 import { PluginExtensionAddedComponentConfig } from '@grafana/data';
 
-import { isAddedComponentMetaInfoMissing, isGrafanaDevMode, wrapWithPluginContext } from '../utils';
+import { MetaValidator } from '../MetaValidator';
+import { wrapWithPluginContext } from '../utils';
 import { extensionPointEndsWithVersion, isGrafanaCoreExtensionPoint } from '../validators';
 
 import { PluginExtensionConfigs, Registry, RegistryType } from './Registry';
@@ -34,6 +35,8 @@ export class AddedComponentsRegistry extends Registry<
     const { pluginId, configs } = item;
 
     for (const config of configs) {
+      const errors: string[] = [];
+      const metaValidator = new MetaValidator(pluginId);
       const configLog = this.logger.child({
         description: config.description,
         title: config.title,
@@ -41,20 +44,25 @@ export class AddedComponentsRegistry extends Registry<
       });
 
       if (!config.title) {
-        configLog.error(`Could not register added component. Reason: Title is missing.`);
-        continue;
+        errors.push(`* Title is missing.`);
       }
 
       if (!config.description) {
-        configLog.error(`Could not register added component'. Reason: Description is missing.`);
-        continue;
+        errors.push(`* Description is missing.`);
       }
 
-      if (
-        pluginId !== 'grafana' &&
-        isGrafanaDevMode() &&
-        isAddedComponentMetaInfoMissing(pluginId, config, configLog)
-      ) {
+      if (metaValidator.addedComponentNotDefined(config)) {
+        errors.push(
+          `* The extension was not declared in the plugin.json of "${pluginId}". Added component extensions must be listed in the section "extensions.addedComponents[]".`
+        );
+      }
+
+      if (metaValidator.addedComponentTargetsNotDefined(config)) {
+        errors.push(`* The "targets" property is missing in the added component configuration.`);
+      }
+
+      if (errors.length > 0) {
+        configLog.error(`Could not register component extension. Reasons: \n${errors.join('\n')}`);
         continue;
       }
 
@@ -75,7 +83,7 @@ export class AddedComponentsRegistry extends Registry<
           title: config.title,
         };
 
-        pointIdLog.debug(`Added component from '${pluginId}' to '${extensionPointId}'`);
+        pointIdLog.debug(`Component extension successfully registered.`);
 
         if (!(extensionPointId in registry)) {
           registry[extensionPointId] = [result];
