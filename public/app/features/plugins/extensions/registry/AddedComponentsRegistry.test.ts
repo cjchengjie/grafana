@@ -374,7 +374,7 @@ describe('AddedComponentsRegistry', () => {
     });
 
     expect(log.warning).toHaveBeenCalledWith(
-      `Added component "Component 1 title": it's recommended to suffix the extension point id ("${extensionPointId}") with a version, e.g 'myorg-basic-app/extension-point/v1'.`
+      "It's recommended to suffix the extension point id (\"grafana/test/home\") with a version, e.g 'myorg-basic-app/extension-point/v1'."
     );
     const currentState = await registry.getState();
     expect(Object.keys(currentState)).toHaveLength(1);
@@ -396,9 +396,7 @@ describe('AddedComponentsRegistry', () => {
       ],
     });
 
-    expect(log.error).toHaveBeenCalledWith(
-      "Could not register added component with title 'Component 1 title'. Reason: Description is missing."
-    );
+    expect(log.error).toHaveBeenCalledWith("Could not register added component'. Reason: Description is missing.");
     const currentState = await registry.getState();
     expect(Object.keys(currentState)).toHaveLength(0);
   });
@@ -505,7 +503,7 @@ describe('AddedComponentsRegistry', () => {
     const currentState = await registry.getState();
 
     expect(Object.keys(currentState)).toHaveLength(0);
-    expect(log.warning).toHaveBeenCalled();
+    expect(log.error).toHaveBeenCalled();
   });
 
   it('should register a component added by a core Grafana in dev-mode even if the meta-info is missing', async () => {
