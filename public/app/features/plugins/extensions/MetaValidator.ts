@@ -49,6 +49,6 @@ export class MetaValidator {
   addedLinkTargetsNotDefined(extension: PluginExtensionAddedLinkConfig): boolean {
     const pluginJsonMeta = this.config?.extensions.addedLinks.find(({ title }) => title === extension.title);
     const targets = Array.isArray(extension.targets) ? extension.targets : [extension.targets];
-    return !targets.every((target) => pluginJsonMeta?.targets.includes(target));
+    return this.pluginId !== 'grafana' && !targets.every((target) => pluginJsonMeta?.targets.includes(target));
   }
 }
