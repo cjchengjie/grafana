@@ -21,7 +21,7 @@ const DATASOURCE_REF = {
   type: 'grafana-extensionslog-datasource',
 };
 
-const logsViz = VizConfigBuilders.logs().build();
+const logsViz = VizConfigBuilders.logs().setOption('wrapLogMessage', true).build();
 
 sceneUtils.registerRuntimeDataSource({
   dataSource: new ExtensionsLogDataSource(DATASOURCE_REF.type, DATASOURCE_REF.uid, log),
