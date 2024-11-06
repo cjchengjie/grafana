@@ -3,16 +3,8 @@ import { ReplaySubject } from 'rxjs';
 import { IconName, PluginExtensionAddedLinkConfig } from '@grafana/data';
 import { PluginAddedLinksConfigureFunc, PluginExtensionEventHelpers } from '@grafana/data/src/types/pluginExtensions';
 
-import { MetaValidator } from '../MetaValidator';
-import {
-  DESCRIPTION_MISSING,
-  INVALID_CONFIGURE_FN,
-  INVALID_EXTENSION_TARGETS,
-  INVALID_LINK_PATH,
-  INVALID_PATH_OR_ONCLICK,
-  MISSING_EXTENSION_META,
-  TITLE_MISSING,
-} from '../errors';
+import { ExtensionsErrorMessages, ExtensionsType } from '../ExtensionsErrorMessages';
+import { ExtensionsValidator } from '../ExtensionsValidator';
 import {
   extensionPointEndsWithVersion,
   isConfigureFnValid,
@@ -51,8 +43,8 @@ export class AddedLinksRegistry extends Registry<AddedLinkRegistryItem[], Plugin
     const { pluginId, configs } = item;
 
     for (const config of configs) {
-      const errors: string[] = [];
-      const metaValidator = new MetaValidator(pluginId);
+      const metaValidator = new ExtensionsValidator(pluginId);
+      const errors = new ExtensionsErrorMessages(ExtensionsType.AddedLinks, pluginId);
       const { path, title, description, configure, onClick, targets } = config;
       const configLog = this.logger.child({
         path: path ?? '',
@@ -63,40 +55,35 @@ export class AddedLinksRegistry extends Registry<AddedLinkRegistryItem[], Plugin
       });
 
       if (!title) {
-        errors.push(TITLE_MISSING);
+        errors.addTitleMissingError();
       }
 
       if (!description) {
-        errors.push(DESCRIPTION_MISSING);
+        errors.addDescriptionMissingError();
       }
 
       if (!isConfigureFnValid(configure)) {
-        errors.push(INVALID_CONFIGURE_FN);
+        errors.addInvalidConfigureFnError();
       }
 
       if (!path && !onClick) {
-        errors.push(INVALID_PATH_OR_ONCLICK);
+        errors.addInvalidPathOrOnClickError();
       }
 
       if (path && !isLinkPathValid(pluginId, path)) {
-        errors.push(INVALID_LINK_PATH);
+        errors.addInvalidLinkPathError();
       }
 
-      // if (pluginId !== 'grafana' && isGrafanaDevMode() && isAddedLinkMetaInfoMissing(pluginId, config, configLog)) {
-      //   configLog.warning(`Did not register links from plugin ${pluginId} due to missing meta information.`);
-      //   continue;
-      // }
-
       if (metaValidator.addedLinkNotDefined(config)) {
-        errors.push(MISSING_EXTENSION_META(pluginId, 'Link'));
+        errors.addMissingExtensionMetaError();
       }
 
       if (metaValidator.addedLinkTargetsNotDefined(config)) {
-        errors.push(INVALID_EXTENSION_TARGETS);
+        errors.addInvalidExtensionTargetsError();
       }
 
-      if (errors.length > 0) {
-        configLog.error(`Could not register link extension. Reasons: \n${errors.join('\n')}`);
+      if (errors.hasErrors) {
+        configLog.error(errors.getLogMessage());
         continue;
       }
 

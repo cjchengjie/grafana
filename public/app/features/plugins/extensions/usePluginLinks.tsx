@@ -9,6 +9,8 @@ import {
 } from '@grafana/runtime/src/services/pluginExtensions/getPluginExtensions';
 
 import { useAddedLinksRegistry } from './ExtensionRegistriesContext';
+import { ExtensionsErrorMessages, ExtensionsType } from './ExtensionsErrorMessages';
+import { ExtensionsValidator } from './ExtensionsValidator';
 import { INVALID_EXTENSION_POINT_ID, MISSING_EXTENSION_POINT_META_INFO } from './errors';
 import { log } from './logs/log';
 import { isExtensionPointMetaInfoMissing } from './metaValidators';
@@ -34,22 +36,24 @@ export function usePluginLinks({
 
   return useMemo(() => {
     // For backwards compatibility we don't enable restrictions in production or when the hook is used in core Grafana.
-    const enableRestrictions = isGrafanaDevMode() && pluginContext !== null;
     const pluginId = pluginContext?.meta.id ?? '';
+    const validator = new ExtensionsValidator(pluginId, pluginContext !== null);
+    const errors = new ExtensionsErrorMessages(ExtensionsType.AddedLinks, pluginId);
     const pointLog = log.child({
       pluginId,
       extensionPointId,
     });
 
-    if (enableRestrictions && !isExtensionPointIdValid({ extensionPointId, pluginId })) {
-      pointLog.error(INVALID_EXTENSION_POINT_ID(pluginId, extensionPointId));
-      return {
-        isLoading: false,
-        links: [],
-      };
+    if (validator.isExtensionPointIdInvalid(extensionPointId)) {
+      errors.addInvalidExtensionPointIdError(extensionPointId);
+      // pointLog.error(INVALID_EXTENSION_POINT_ID(pluginId, extensionPointId));
+      // return {
+      //   isLoading: false,
+      //   links: [],
+      // };
     }
 
-    if (enableRestrictions && isExtensionPointMetaInfoMissing(extensionPointId, pluginContext)) {
+    if (validator.isExtensionPointMetaInfoMissing(extensionPointId, pluginContext)) {
       pointLog.error(MISSING_EXTENSION_POINT_META_INFO);
       return {
         isLoading: false,

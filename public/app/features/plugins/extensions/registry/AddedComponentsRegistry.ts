@@ -2,7 +2,8 @@ import { ReplaySubject } from 'rxjs';
 
 import { PluginExtensionAddedComponentConfig } from '@grafana/data';
 
-import { MetaValidator } from '../MetaValidator';
+import { ExtensionsErrorMessages, ExtensionsType } from '../ExtensionsErrorMessages';
+import { ExtensionsValidator } from '../ExtensionsValidator';
 import { DESCRIPTION_MISSING, INVALID_EXTENSION_TARGETS, MISSING_EXTENSION_META, TITLE_MISSING } from '../errors';
 import { wrapWithPluginContext } from '../utils';
 import { extensionPointEndsWithVersion, isGrafanaCoreExtensionPoint } from '../validators';
@@ -36,8 +37,8 @@ export class AddedComponentsRegistry extends Registry<
     const { pluginId, configs } = item;
 
     for (const config of configs) {
-      const errors: string[] = [];
-      const metaValidator = new MetaValidator(pluginId);
+      const metaValidator = new ExtensionsValidator(pluginId);
+      const errors = new ExtensionsErrorMessages(ExtensionsType.AddedComponents, pluginId);
       const configLog = this.logger.child({
         description: config.description,
         title: config.title,
@@ -45,23 +46,23 @@ export class AddedComponentsRegistry extends Registry<
       });
 
       if (!config.title) {
-        errors.push(TITLE_MISSING);
+        errors.addTitleMissingError();
       }
 
       if (!config.description) {
-        errors.push(DESCRIPTION_MISSING);
+        errors.addDescriptionMissingError();
       }
 
       if (metaValidator.addedComponentNotDefined(config)) {
-        errors.push(MISSING_EXTENSION_META(pluginId, 'Component'));
+        errors.addMissingExtensionMetaError();
       }
 
       if (metaValidator.addedComponentTargetsNotDefined(config)) {
-        errors.push(INVALID_EXTENSION_TARGETS);
+        errors.addInvalidExtensionTargetsError();
       }
 
-      if (errors.length > 0) {
-        configLog.error(`Could not register component extension. Reasons: \n${errors.join('\n')}`);
+      if (errors.hasErrors) {
+        configLog.error(errors.getLogMessage());
         continue;
       }
 

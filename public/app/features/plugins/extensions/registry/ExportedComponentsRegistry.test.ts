@@ -270,7 +270,7 @@ describe('ExposedComponentsRegistry', () => {
     });
   });
 
-  it('should log a warning if another component with the same id already exists in the registry', async () => {
+  it('should log an error if another component with the same id already exists in the registry', async () => {
     const registry = new ExposedComponentsRegistry();
     registry.register({
       pluginId: 'grafana-basic-app1',
@@ -304,7 +304,7 @@ describe('ExposedComponentsRegistry', () => {
     });
 
     expect(log.error).toHaveBeenCalledWith(
-      "Could not register exposed component with 'grafana-basic-app1/hello-world/v1'. Reason: An exposed component with the same id already exists."
+      expect.stringMatching(/An exposed component with the same id already exists./)
     );
     const currentState2 = await registry.getState();
     expect(Object.keys(currentState2)).toHaveLength(1);
@@ -325,7 +325,9 @@ describe('ExposedComponentsRegistry', () => {
     });
 
     expect(log.error).toHaveBeenCalledWith(
-      "Could not register exposed component with 'hello-world/v1'. Reason: The component id does not match the id naming convention. Id should be prefixed with plugin id. e.g 'myorg-basic-app/my-component-id/v1'."
+      expect.stringMatching(
+        /The component id does not match the id naming convention. Id should be prefixed with plugin id./
+      )
     );
     const currentState = await registry.getState();
     expect(Object.keys(currentState)).toHaveLength(0);
@@ -345,7 +347,7 @@ describe('ExposedComponentsRegistry', () => {
       ],
     });
 
-    expect(log.error).toHaveBeenCalledWith(
+    expect(log.warning).toHaveBeenCalledWith(
       "Exposed component does not match the convention. It's recommended to suffix the id with the component version. e.g 'myorg-basic-app/my-component-id/v1'."
     );
     const currentState = await registry.getState();
@@ -367,9 +369,7 @@ describe('ExposedComponentsRegistry', () => {
       ],
     });
 
-    expect(log.error).toHaveBeenCalledWith(
-      "Could not register exposed component with id 'grafana-basic-app/hello-world/v1'. Reason: Description is missing."
-    );
+    expect(log.error).toHaveBeenCalledWith(expect.stringMatching(/Description is missing./));
 
     const currentState = await registry.getState();
     expect(Object.keys(currentState)).toHaveLength(0);
@@ -390,9 +390,7 @@ describe('ExposedComponentsRegistry', () => {
       ],
     });
 
-    expect(log.error).toHaveBeenCalledWith(
-      "Could not register exposed component with id 'grafana-basic-app/hello-world/v1'. Reason: Title is missing."
-    );
+    expect(log.error).toHaveBeenCalledWith(expect.stringMatching(/Title is missing./));
 
     const currentState = await registry.getState();
     expect(Object.keys(currentState)).toHaveLength(0);
@@ -478,7 +476,7 @@ describe('ExposedComponentsRegistry', () => {
     const currentState = await registry.getState();
 
     expect(Object.keys(currentState)).toHaveLength(0);
-    expect(log.warning).toHaveBeenCalled();
+    expect(log.error).toHaveBeenCalled();
   });
 
   it('should register an exposed component added by a core Grafana in dev-mode even if the meta-info is missing', async () => {
