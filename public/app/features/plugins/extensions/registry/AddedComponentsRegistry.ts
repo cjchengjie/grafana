@@ -3,6 +3,7 @@ import { ReplaySubject } from 'rxjs';
 import { PluginExtensionAddedComponentConfig } from '@grafana/data';
 
 import { MetaValidator } from '../MetaValidator';
+import { DESCRIPTION_MISSING, INVALID_EXTENSION_TARGETS, MISSING_EXTENSION_META, TITLE_MISSING } from '../errors';
 import { wrapWithPluginContext } from '../utils';
 import { extensionPointEndsWithVersion, isGrafanaCoreExtensionPoint } from '../validators';
 
@@ -44,21 +45,19 @@ export class AddedComponentsRegistry extends Registry<
       });
 
       if (!config.title) {
-        errors.push(`* Title is missing.`);
+        errors.push(TITLE_MISSING);
       }
 
       if (!config.description) {
-        errors.push(`* Description is missing.`);
+        errors.push(DESCRIPTION_MISSING);
       }
 
       if (metaValidator.addedComponentNotDefined(config)) {
-        errors.push(
-          `* The extension was not declared in the plugin.json of "${pluginId}". Added component extensions must be listed in the section "extensions.addedComponents[]".`
-        );
+        errors.push(MISSING_EXTENSION_META(pluginId, 'Component'));
       }
 
       if (metaValidator.addedComponentTargetsNotDefined(config)) {
-        errors.push(`* The "targets" property is missing in the added component configuration.`);
+        errors.push(INVALID_EXTENSION_TARGETS);
       }
 
       if (errors.length > 0) {

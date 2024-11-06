@@ -4,7 +4,15 @@ import { IconName, PluginExtensionAddedLinkConfig } from '@grafana/data';
 import { PluginAddedLinksConfigureFunc, PluginExtensionEventHelpers } from '@grafana/data/src/types/pluginExtensions';
 
 import { MetaValidator } from '../MetaValidator';
-import { isAddedLinkMetaInfoMissing, isGrafanaDevMode } from '../utils';
+import {
+  DESCRIPTION_MISSING,
+  INVALID_CONFIGURE_FN,
+  INVALID_EXTENSION_TARGETS,
+  INVALID_LINK_PATH,
+  INVALID_PATH_OR_ONCLICK,
+  MISSING_EXTENSION_META,
+  TITLE_MISSING,
+} from '../errors';
 import {
   extensionPointEndsWithVersion,
   isConfigureFnValid,
@@ -55,38 +63,36 @@ export class AddedLinksRegistry extends Registry<AddedLinkRegistryItem[], Plugin
       });
 
       if (!title) {
-        errors.push(`* Title is missing.`);
+        errors.push(TITLE_MISSING);
       }
 
       if (!description) {
-        errors.push(`* Description is missing.`);
+        errors.push(DESCRIPTION_MISSING);
       }
 
       if (!isConfigureFnValid(configure)) {
-        errors.push(`* The provided "configure" is not a function.`);
+        errors.push(INVALID_CONFIGURE_FN);
       }
 
       if (!path && !onClick) {
-        errors.push(`* Either "path" or "onClick" is required.`);
+        errors.push(INVALID_PATH_OR_ONCLICK);
       }
 
       if (path && !isLinkPathValid(pluginId, path)) {
-        errors.push(`* The "path" is required and should start with "/a/${pluginId}/".`);
+        errors.push(INVALID_LINK_PATH);
       }
 
-      if (pluginId !== 'grafana' && isGrafanaDevMode() && isAddedLinkMetaInfoMissing(pluginId, config, configLog)) {
-        configLog.warning(`Did not register links from plugin ${pluginId} due to missing meta information.`);
-        continue;
-      }
+      // if (pluginId !== 'grafana' && isGrafanaDevMode() && isAddedLinkMetaInfoMissing(pluginId, config, configLog)) {
+      //   configLog.warning(`Did not register links from plugin ${pluginId} due to missing meta information.`);
+      //   continue;
+      // }
 
       if (metaValidator.addedLinkNotDefined(config)) {
-        errors.push(
-          `* The extension was not declared in the plugin.json of "${pluginId}". Added link extensions must be listed in the section "extensions.addedLinks[]".`
-        );
+        errors.push(MISSING_EXTENSION_META(pluginId, 'Link'));
       }
 
       if (metaValidator.addedLinkTargetsNotDefined(config)) {
-        errors.push(`* The "targets" property is missing in the added links configuration.`);
+        errors.push(INVALID_EXTENSION_TARGETS);
       }
 
       if (errors.length > 0) {

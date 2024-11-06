@@ -661,7 +661,7 @@ describe('AddedLinksRegistry', () => {
     const currentState = await registry.getState();
 
     expect(Object.keys(currentState)).toHaveLength(0);
-    expect(log.warning).toHaveBeenCalled();
+    expect(log.error).toHaveBeenCalled();
   });
 
   it('should register a link added by core Grafana in dev-mode even if the meta-info is missing', async () => {
